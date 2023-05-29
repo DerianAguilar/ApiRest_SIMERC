@@ -5,7 +5,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import javax.persistence.Column;
 
 @Setter @Getter @AllArgsConstructor @NoArgsConstructor
 public class RegistroAlumRequest {
@@ -17,8 +16,10 @@ public class RegistroAlumRequest {
     private String email;
     private String colegio;
     private String direccion;
+    private String carrera;
     private String telefono;
     private String nacionalidad;
     private String modalidad;
+    private String observaciones;
     private String correo; //Correo de la persona que registra
 }

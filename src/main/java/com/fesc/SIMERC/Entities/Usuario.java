@@ -33,6 +33,7 @@ public class Usuario implements Serializable, UserDetails {
     private String nombre;
     @Column(length = 50)
     private String apellido;
+    private String carrera;
     private String email;
     private String colegio;
     private String direccion;
@@ -40,6 +41,8 @@ public class Usuario implements Serializable, UserDetails {
     private String telefono;
     private String nacionalidad;
     private String modalidad;
+    @Column(length = 500)
+    private String observaciones;
     private String pass;
     private String passwordEmail;
     private String tokenPassword;

@@ -14,7 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/registro")
+@RequestMapping("/usuario")
 @CrossOrigin("*")
 public class UsuarioController {
 
@@ -24,7 +24,7 @@ public class UsuarioController {
     @Autowired
     private UsuarioService usuarioService;
 
-    @PostMapping("/asesor")
+    @PostMapping("/asesor-registrar")
     public ResponseEntity<?> registrarAsesor (@RequestBody RegistroAsesorRequest asesorRequest){
 
         try{
@@ -42,7 +42,7 @@ public class UsuarioController {
 
     }
 
-    @PostMapping("/alumno")
+    @PostMapping("/alumno-registrar")
     public ResponseEntity<?> registrarAlumno (@RequestBody RegistroAlumRequest alumRequest){
 
         try{
@@ -58,6 +58,12 @@ public class UsuarioController {
             return new ResponseEntity<>(new Mensaje("Error al registrar el alumno "), HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
+    }
+
+    @GetMapping("/buscar-alumno/{buscar}")
+    public ResponseEntity<?> listarAlumnos(@PathVariable("buscar")String buscar){
+
+        return new ResponseEntity<>(usuarioService.buscarAlumno(buscar), HttpStatus.OK);
     }
 
 

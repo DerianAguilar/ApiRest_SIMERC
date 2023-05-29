@@ -19,9 +19,11 @@ public class RegistroAlumDTO implements Serializable {
     private String email;
     private String colegio;
     private String direccion;
+    private String carrera;
     private String telefono;
     private String nacionalidad;
     private String modalidad;
+    private String observaciones;
     private String correo;
 
 }

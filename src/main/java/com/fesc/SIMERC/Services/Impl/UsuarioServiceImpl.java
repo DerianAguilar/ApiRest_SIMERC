@@ -3,6 +3,7 @@ package com.fesc.SIMERC.Services.Impl;
 import com.fesc.SIMERC.Entities.AuditoriaGestion;
 import com.fesc.SIMERC.Entities.Rol;
 import com.fesc.SIMERC.Entities.Usuario;
+import com.fesc.SIMERC.Models.Respuestas.BuscarAlumnoResponse;
 import com.fesc.SIMERC.Repositories.AuditoriaGestionRepository;
 import com.fesc.SIMERC.Repositories.RolRepository;
 import com.fesc.SIMERC.Repositories.UsuarioRepository;
@@ -131,6 +132,38 @@ public class UsuarioServiceImpl implements UsuarioService {
         auditoria("Registro","Registro al "+usuario.getRol().getRolNombre() +" "
                 +usuario.getNombre()+" "+usuario.getApellido(), registroAlumDTO.getCorreo());
 
+    }
+
+    @Override
+    public BuscarAlumnoResponse buscarAlumno(String txtBusc) {
+
+        Usuario usuario = usuarioRepository.buscarAumno(txtBusc);
+        /*
+        List<Usuario> usuarios = usuarioRepository.findAll();
+
+        if (usuarios.isEmpty()){
+            throw new MyException("No hay alumnos registrados");
+        }
+        Usuario usuario = null;
+        for (Usuario user : usuarios){
+            if (Objects.equals(user.getEmail(),txtBusc) || Objects.equals(user.getDocumento(),txtBusc)
+            || Objects.equals(user.getNombre(),txtBusc) || Objects.equals(user.getApellido(),txtBusc)
+            && Objects.equals(user.getRol().getRolNombre(),"ALUMNO")){
+                usuario = user;
+            }
+        }*/
+
+        if (usuario == null){
+            throw new MyException("El alumno no esta registrado");
+        }
+
+        BuscarAlumnoResponse alumnoResponse = new BuscarAlumnoResponse();
+        alumnoResponse.setNombre(usuario.getNombre() + " "+ usuario.getApellido());
+        alumnoResponse.setDocumento(usuario.getDocumento());
+        alumnoResponse.setCorreo(usuario.getEmail());
+        alumnoResponse.setCarrera(usuario.getCarrera());
+
+        return alumnoResponse;
     }
 
     public void auditoria (String titulo, String desc, String correo){
