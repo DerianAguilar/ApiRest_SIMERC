@@ -1,22 +1,25 @@
 package com.fesc.SIMERC.Services.Impl;
 
-import com.fesc.SIMERC.Entities.AuditoriaGestion;
-import com.fesc.SIMERC.Entities.Rol;
-import com.fesc.SIMERC.Entities.Usuario;
+import com.fesc.SIMERC.Entities.*;
 import com.fesc.SIMERC.Models.Respuestas.BuscarAlumnoResponse;
-import com.fesc.SIMERC.Repositories.AuditoriaGestionRepository;
-import com.fesc.SIMERC.Repositories.RolRepository;
-import com.fesc.SIMERC.Repositories.UsuarioRepository;
+import com.fesc.SIMERC.Models.Respuestas.DetalleAlumnResponse;
+import com.fesc.SIMERC.Repositories.*;
 import com.fesc.SIMERC.Security.Exceptions.MyException;
 import com.fesc.SIMERC.Services.UsuarioService;
+import com.fesc.SIMERC.Shared.RecordatorioDTO;
 import com.fesc.SIMERC.Shared.RegistroAlumDTO;
 import com.fesc.SIMERC.Shared.RegistroAsesorDTO;
+import com.fesc.SIMERC.Shared.TareaSaveDTO;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
@@ -27,6 +30,10 @@ public class UsuarioServiceImpl implements UsuarioService {
     private UsuarioRepository usuarioRepository;
     @Autowired
     private RolRepository rolRepository;
+    @Autowired
+    private RecordatorioRepository recordatorioRepository;
+    @Autowired
+    private TareaRepository tareaRepository;
     @Autowired
     private ModelMapper modelMapper;
     @Autowired
@@ -135,35 +142,119 @@ public class UsuarioServiceImpl implements UsuarioService {
     }
 
     @Override
-    public BuscarAlumnoResponse buscarAlumno(String txtBusc) {
+    public List<BuscarAlumnoResponse> buscarAlumno(String txtBusc) {
 
-        Usuario usuario = usuarioRepository.buscarAumno(txtBusc);
-        /*
-        List<Usuario> usuarios = usuarioRepository.findAll();
+        List<Usuario> usuarios = usuarioRepository.buscarAumno(txtBusc);
 
-        if (usuarios.isEmpty()){
+        List<BuscarAlumnoResponse> alumnos = new ArrayList<>();
+
+        for (Usuario usuario : usuarios){
+            if (Objects.equals(usuario.getRol().getRolNombre(),"ALUMNO")){
+
+                BuscarAlumnoResponse alumnoResponse = new BuscarAlumnoResponse();
+                alumnoResponse.setNombre(usuario.getNombre() + " "+ usuario.getApellido());
+                alumnoResponse.setDocumento(usuario.getDocumento());
+                alumnoResponse.setCorreo(usuario.getEmail());
+                alumnoResponse.setCarrera(usuario.getCarrera());
+                alumnos.add(alumnoResponse);
+
+            }
+        }
+
+        if (alumnos.isEmpty()){
             throw new MyException("No hay alumnos registrados");
         }
-        Usuario usuario = null;
-        for (Usuario user : usuarios){
-            if (Objects.equals(user.getEmail(),txtBusc) || Objects.equals(user.getDocumento(),txtBusc)
-            || Objects.equals(user.getNombre(),txtBusc) || Objects.equals(user.getApellido(),txtBusc)
-            && Objects.equals(user.getRol().getRolNombre(),"ALUMNO")){
-                usuario = user;
-            }
-        }*/
 
-        if (usuario == null){
-            throw new MyException("El alumno no esta registrado");
+
+
+        return alumnos;
+    }
+
+    @Override
+    public DetalleAlumnResponse detalleAlumno(String txtBusc) {
+
+        Usuario user = usuarioRepository.findByEmail(txtBusc);
+
+        if (user == null){
+            throw new MyException("El alumno no existe");
+        }
+        return modelMapper.map(user, DetalleAlumnResponse.class);
+    }
+
+    @Override
+    public void guardarRecordatorio(RecordatorioDTO recordatorioDTO) {
+
+        Usuario user = usuarioRepository.findByEmail(recordatorioDTO.getEmail());
+        if (user == null){
+            throw new MyException("El usuario no existe");
         }
 
-        BuscarAlumnoResponse alumnoResponse = new BuscarAlumnoResponse();
-        alumnoResponse.setNombre(usuario.getNombre() + " "+ usuario.getApellido());
-        alumnoResponse.setDocumento(usuario.getDocumento());
-        alumnoResponse.setCorreo(usuario.getEmail());
-        alumnoResponse.setCarrera(usuario.getCarrera());
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        String fechaFormat = simpleDateFormat.format(recordatorioDTO.getFecha());
 
-        return alumnoResponse;
+        Recordatorio recordatorio = modelMapper.map(recordatorioDTO, Recordatorio.class);
+        recordatorio.setUser(user);
+        recordatorio.setFecha(fechaFormat);
+
+        recordatorioRepository.save(recordatorio);
+
+    }
+
+    @Override
+    public List<Recordatorio> listarRecordatorio(String email) throws ParseException {
+
+        Usuario user = usuarioRepository.findByEmail(email);
+        List<Recordatorio> recordatorios = recordatorioRepository.listarRecorUser(user.getId());
+
+        if (recordatorios.isEmpty()){
+            throw new MyException("No hay recordatorios");
+        }
+        List<Recordatorio> recorReturn = new ArrayList<>();
+        Date fechaActual = new Date();
+        for (Recordatorio recor: recordatorios){
+            String fecha = recor.getFecha();
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+            Date fechaFormat = simpleDateFormat.parse(fecha);
+
+            if (fechaFormat.compareTo(fechaActual) == 0){
+                recorReturn.add(recor);
+            }
+        }
+
+        if (recorReturn.isEmpty()){
+            throw new MyException("No tienes recordatorios para hoy");
+        }
+
+        return recorReturn;
+    }
+
+    @Override
+    public void asignarTarea(TareaSaveDTO saveDTO) {
+        Usuario user = usuarioRepository.findByEmail(saveDTO.getEmail());
+        if (user == null){
+            throw new MyException("El usuario no existe");
+        }
+
+        Tarea tarea = modelMapper.map(saveDTO, Tarea.class);
+        tarea.setUser(user);
+
+        tareaRepository.save(tarea);
+    }
+
+    @Override
+    public List<Tarea> misTareas(String email) {
+
+        Usuario user = usuarioRepository.findByEmail(email);
+        if (user == null){
+            throw new MyException("El usuario no existe");
+        }
+
+        List<Tarea> misTareas = tareaRepository.misTareas(user.getId());
+        if (misTareas.isEmpty()){
+            throw new MyException("No tienes tareas pendientes");
+        }
+
+        return misTareas;
     }
 
     public void auditoria (String titulo, String desc, String correo){
