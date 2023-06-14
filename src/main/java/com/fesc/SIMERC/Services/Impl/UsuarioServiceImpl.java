@@ -18,10 +18,7 @@ import org.springframework.stereotype.Service;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 @Service
 public class UsuarioServiceImpl implements UsuarioService {
@@ -79,8 +76,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         Usuario usuario = null;
 
         for (Usuario user : usuarioList){
-            if (Objects.equals(user.getEmail(), registroAsesorDTO.getEmail())
-                && Objects.equals(registroAsesorDTO.getRols(), user.getRol().getRolNombre())){
+            if (Objects.equals(user.getEmail(), registroAsesorDTO.getEmail())){
                 usuario = user;
             }
         }
@@ -115,14 +111,13 @@ public class UsuarioServiceImpl implements UsuarioService {
         Usuario usuario = null;
 
         for (Usuario user : usuarioList){
-            if (Objects.equals(user.getEmail(), registroAlumDTO.getEmail())
-                    && Objects.equals("ALUMNO", user.getRol().getRolNombre())){
+            if (Objects.equals(user.getEmail(), registroAlumDTO.getEmail())){
                 usuario = user;
             }
         }
 
         if (usuario != null){
-            throw new MyException("EL usuario ya existe con este rol. ");
+            throw new MyException("EL usuario ya existe.");
         }
 
         Rol rol = new Rol();
@@ -161,10 +156,6 @@ public class UsuarioServiceImpl implements UsuarioService {
             }
         }
 
-        if (alumnos.isEmpty()){
-            throw new MyException("No hay alumnos registrados");
-        }
-
 
 
         return alumnos;
@@ -188,10 +179,18 @@ public class UsuarioServiceImpl implements UsuarioService {
         if (user == null){
             throw new MyException("El usuario no existe");
         }
+        System.out.println(recordatorioDTO.getFecha()+" *********");
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(recordatorioDTO.getFecha());
+
+        calendar.add(Calendar.DAY_OF_YEAR, 1);
+        Date nuevaFecha = calendar.getTime();
 
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
-        String fechaFormat = simpleDateFormat.format(recordatorioDTO.getFecha());
+        String fechaFormat = simpleDateFormat.format(nuevaFecha);
 
+        System.out.println(fechaFormat+" ***********");
         Recordatorio recordatorio = modelMapper.map(recordatorioDTO, Recordatorio.class);
         recordatorio.setUser(user);
         recordatorio.setFecha(fechaFormat);
@@ -213,10 +212,13 @@ public class UsuarioServiceImpl implements UsuarioService {
         Date fechaActual = new Date();
         for (Recordatorio recor: recordatorios){
             String fecha = recor.getFecha();
-            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
-            Date fechaFormat = simpleDateFormat.parse(fecha);
 
-            if (fechaFormat.compareTo(fechaActual) == 0){
+            System.out.println(fecha+" **************");
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+            String fechaAct = simpleDateFormat.format(fechaActual);
+            System.out.println(fechaAct + " *************");
+
+            if (Objects.equals(fecha, fechaAct)){
                 recorReturn.add(recor);
             }
         }

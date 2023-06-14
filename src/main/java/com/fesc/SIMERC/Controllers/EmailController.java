@@ -25,7 +25,7 @@ public class EmailController {
     public ResponseEntity<?> enviarCorreo (@RequestBody EnviarUnEmailRequest emailRequest){
 
         try{
-
+            System.out.println("entre al correo"+emailRequest.getEmail()+" ***********");
             EnviarEmailDTO emailDTO = modelMapper.map(emailRequest, EnviarEmailDTO.class);
 
             emailService.enviarEmail(emailDTO);
@@ -33,6 +33,7 @@ public class EmailController {
             return new ResponseEntity<>(new Mensaje("Correo enviado"), HttpStatus.OK);
 
         }catch (Exception ex){
+            ex.printStackTrace();
             return new ResponseEntity<>(new Mensaje("Error al enviar el correo"), HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
